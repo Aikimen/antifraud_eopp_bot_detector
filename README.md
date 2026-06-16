@@ -1,82 +1,34 @@
-Behaviour-based Bot Detection Engine
-Author: Eugene Arkhipov + AI help
-Project Status: Functional prototype (actively maintained)
+# Web Traffic & Bot Detection Analyzer (Shannon Entropy Engine)
+**Author:** Eugene Arkhipov  
+**Project Status:** Functional MVP 
 
-📌 Project Overview
-A lightweight Python analytics utility designed to identify automated traffic (bots, scripts, timed attacks) in web service logs. Unlike traditional signature-based methods, this engine analyses temporal interaction patterns between the user and the API, applying information theory and unsupervised machine learning.
+## 📌 Project Overview
+A lightweight Python analytical utility designed to parse, sanitize, and analyze web server access logs to detect automated bot activity. 
 
-Core idea: a human clicks with chaotic, naturally varying pauses; a script operates rhythmically like a metronome or produces statistically degenerate sequences. The detector catches these differences via stochastic resonance, interval entropy analysis, and an Isolation Forest model.
+Instead of simple signature matching, this script evaluates user behavior by computing **Shannon Entropy** to measure the structural diversity of visited URLs alongside request intensity metrics (Requests Per Minute - RPM).
 
-🔥 Key Features
-Temporal Interval Analysis – computation of pauses between consecutive operations for each user, filtering out "overnight" gaps.
+## 🔥 Key Features
+* **Vectorized Log Sanitization:** Highly optimized string manipulation using Pandas and Regular Expressions to clean dynamic path parameters (UUIDs, dynamic IDs, query strings) into unified endpoints (e.g., changing `/api/v1/user/123-abc` to `/{id}`).
+* **Shannon Entropy Computation:** Calculates data entropy metrics for each user to analyze behavioral randomness. Low entropy signifies repetitive, non-human, structured routing paths (typical cyclic bots).
+* **Behavioral Heuristics Classification:** Automatically categories traffic patterns into three operational states:
+  * `definite_bots` — High speed (RPM > 100) or extremely low navigation diversity (< 10%).
+  * `possible_bots` — Users sitting inside suspicious behavioral thresholds (Diversity < 30%).
+  * `humans` — Standard organic navigation footprints.
+* **Dual-Layer Analytics Reports:** Computes statistical metrics across the full log structure, isolating high-frequency actors to minimize false positives.
 
-Stochastic Resonance – adding adaptive noise to the interval distribution and measuring the entropy change: regular (bot) patterns cause a sharp entropy increase, while chaotic human patterns remain almost unchanged.
+## 🛠️ Requirements & Tech Stack
+* **Language:** Python 3.8+
+* **Libraries:** `pandas`, `numpy`
 
-Extended Rhythm Metrics – autocorrelation, unique interval ratio, exponential distribution test, frequency of the three most common pauses.
+To install dependencies:
+```bash
+pip install pandas numpy
+```
 
-Unsupervised Machine Learning (Isolation Forest) – automatic detection of anomalous users in the feature space, no labeled data required.
-
-Hybrid Scoring – combination of the stochastic test and the ML score into a single "bot probability" with configurable weights.
-
-Interpretable Verdicts – four-tier classification: normal, suspicious (speed bot), aggressive script, critical timer-based bot.
-
-Visualisation – scatter plot "Chaos vs Robot Test" with colour mapping for bot probability.
-
-Resilience to incomplete data – gracefully handles missing columns (e.g., request URL) without breaking.
-
-🛠️ Requirements & Tech Stack
-Language: Python 3.8+
-
-Libraries: pandas, numpy, scipy, scikit-learn, matplotlib, tqdm
-
-Install dependencies:
-
-bash
-pip install pandas numpy scipy scikit-learn matplotlib tqdm
-🚀 How It Works & Usage
-Data Preparation: Place your log CSV in the project root. Required columns: userId, RequestId, timestamp. If RequestPath is present, endpoint diversity analysis is activated.
-
-Execution: Run the script:
-
-bash
-python bot_detector.py
-The input filename can be changed in the if __name__ == "__main__": block (default is raw_request.csv).
-
-Outputs: The script generates:
-
-GIS_EPD_Final_Report.csv – table with per-user scores: average pause, click chaos, robot test, final probability, and verdict.
-
-snowflakes_plot.png – visualisation of the bot detection landscape.
-
-📁 Directory Structure
-text
-/behaviour-bot-detector
-│
-├── bot_detector.py          # Main analytical pipeline
-├── raw_request.csv          # Input data (not included in repo)
-├── GIS_EPD_Final_Report.csv # Output report
-├── snowflakes_plot.png      # Visualisation
-└── README.md                # This documentation
-⚙️ Configuration (inside the script)
-All key parameters are stored in the CONFIG dictionary at the top of the file, making them easy to adjust:
-
-Verdict thresholds (critical, suspicious, speed_warning)
-
-Isolation Forest parameters (contamination, n_estimators)
-
-Hybrid score weights (entropy / ml)
-
-Noise level for stochastic resonance, and more.
-
-💡 Why This Matters (Business & Security Impact)
-Traditional WAFs and signature-based filters miss "silent" bots that disguise themselves as legitimate traffic. Temporal behavioural analysis:
-
-Detects timer-based attacks (credential stuffing, automated enumeration) before damage is done.
-
-Does not require bot examples (unsupervised), thus effective against novel, unseen scripts.
-
-Reduces SOC analyst workload by providing a pre-ranked list of suspicious users.
-
-Easily integrates into offline log audit pipelines, serving as an additional intelligence source for blocking rules.
-
-Ideal for API-driven systems where each user operation is logged with a request ID and timestamp.
+## 🚀 How It Works & Usage
+1. Place your log CSV file into your working environment (Required columns: `timestamp`, `RequestPath`, `userId`, `ipAddress`).
+2. Run the main analytical engine:
+   ```bash
+   python main.py
+   ```
+3. Check execution logs in your terminal and find your processed output inside the `/analysis_results` folder.
